@@ -467,32 +467,99 @@
   </div>
 </div>
 
-  <script>
-  // 🔒 Aviso legal visible en consola
-  console.log("⚠️ Prototipo propiedad de Hackademy. No se autoriza su uso o redistribución sin consentimiento.");
+ <script>
+  // ====== CONFIG ======
+  const MSG = "🔒 Prototipo propiedad de Hackademy. Uso no autorizado prohibido.";
+  const DEVTOOLS_SIZE_THRESHOLD = 160; // px de diferencia típica cuando DevTools está abierto
 
-  // 🚫 Bloqueo de clic derecho
-  document.addEventListener("contextmenu", e => e.preventDefault());
+  // ====== OVERLAY (se muestra si detectamos DevTools) ======
+  const overlay = document.createElement("div");
+  overlay.id = "hackademy-guard";
+  overlay.style.cssText = `
+    position:fixed; inset:0; background:rgba(10,12,20,.95);
+    color:#e6e9ff; display:none; z-index:99999;
+    backdrop-filter: blur(2px);
+  `;
+  overlay.innerHTML = `
+    <div style="max-width:680px;margin:12vh auto;padding:28px 24px;border:1px solid #3b3f5c;border-radius:14px;background:#141829;">
+      <h2 style="margin:0 0 8px 0;">Modo seguro activado</h2>
+      <p style="margin:0 0 14px 0;line-height:1.55">
+        Se detectó apertura de herramientas de desarrollador. ${MSG}
+        Cierra DevTools para continuar usando la demo.
+      </p>
+      <button id="guard-try" style="border:none;padding:10px 14px;border-radius:10px;background:#7c5cff;color:#fff;cursor:pointer">
+        Reintentar
+      </button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById("guard-try").onclick = () => {
+    if (!isDevToolsOpen()) hideGuard();
+  };
 
-  // 🚫 Bloqueo de teclas de inspección / copia rápida
-  document.onkeydown = e => {
-    if (
-      e.key === "F12" || 
-      (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) || 
-      (e.ctrlKey && e.key === "U")
-    ) {
+  function showGuard(){
+    overlay.style.display = "block";
+    document.documentElement.style.pointerEvents = "none";
+    overlay.style.pointerEvents = "auto";
+  }
+  function hideGuard(){
+    overlay.style.display = "none";
+    document.documentElement.style.pointerEvents = "auto";
+  }
+
+  // ====== Heurística: ¿DevTools abiertos?
+  function isDevToolsOpen(){
+    const diffW = Math.abs(window.outerWidth - window.innerWidth);
+    const diffH = Math.abs(window.outerHeight - window.innerHeight);
+    return (diffW > DEVTOOLS_SIZE_THRESHOLD || diffH > DEVTOOLS_SIZE_THRESHOLD);
+  }
+
+  // Monitoreo periódico
+  setInterval(() => { if (isDevToolsOpen()) showGuard(); }, 600);
+
+  // ====== Bloqueos: clic derecho, copiar/pegar, arrastre
+  document.addEventListener("contextmenu", e => e.preventDefault(), true);
+  ["copy","cut","paste","dragstart"].forEach(evt =>
+    document.addEventListener(evt, e => e.preventDefault(), true)
+  );
+
+  // ====== Bloqueo de teclas (captura temprana)
+  const blockedCombos = (e) => (
+    e.key === "F12" ||
+    (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
+    (e.metaKey && e.altKey && e.key.toUpperCase() === "I") || // atajos en Mac
+    (e.ctrlKey && e.key.toUpperCase() === "U")
+  );
+
+  const keyHandler = (e) => {
+    if (blockedCombos(e)) {
       e.preventDefault();
-      alert("🔒 Función deshabilitada — Prototipo propiedad de Hackademy");
+      e.stopPropagation();
+      alert(MSG);
+      return false;
+    }
+    // doble/continua pulsación de F12
+    if (e.key === "F12" && (e.repeat || e.detail > 1)) {
+      e.preventDefault();
+      e.stopPropagation();
+      alert(MSG);
       return false;
     }
   };
+
+  ["keydown","keypress","keyup"].forEach(evt =>
+    document.addEventListener(evt, keyHandler, true) // fase de captura
+  );
+
+  // Si cambia visibilidad (a veces cuando abren DevTools se recalcula)
+  document.addEventListener("visibilitychange", () => {
+    if (isDevToolsOpen()) showGuard();
+  });
+
+  // Mensaje en consola (por si igual entran)
+  try { console.log("⚠️ " + MSG); } catch(_) {}
 </script>
 
-<footer style="text-align:center; font-size:12px; color:#999; margin-top:40px;">
-  © 2025 Hackademy by Jiasmir. Todos los derechos reservados.<br>
-  Prototipo propiedad de Hackademy. No se autoriza su uso o redistribución sin consentimiento.<br>
-  El acceso implica aceptar los <a href="#" style="color:#7f7fff;">Términos de uso de la demo</a>.
-</footer>
   
 </body>
 </html>
