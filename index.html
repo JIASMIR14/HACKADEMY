@@ -467,5 +467,32 @@
   </div>
 </div>
 
+  <script>
+  // 🔒 Aviso legal visible en consola
+  console.log("⚠️ Prototipo propiedad de Hackademy. No se autoriza su uso o redistribución sin consentimiento.");
+
+  // 🚫 Bloqueo de clic derecho
+  document.addEventListener("contextmenu", e => e.preventDefault());
+
+  // 🚫 Bloqueo de teclas de inspección / copia rápida
+  document.onkeydown = e => {
+    if (
+      e.key === "F12" || 
+      (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) || 
+      (e.ctrlKey && e.key === "U")
+    ) {
+      e.preventDefault();
+      alert("🔒 Función deshabilitada — Prototipo propiedad de Hackademy");
+      return false;
+    }
+  };
+</script>
+
+<footer style="text-align:center; font-size:12px; color:#999; margin-top:40px;">
+  © 2025 Hackademy by Jiasmir. Todos los derechos reservados.<br>
+  Prototipo propiedad de Hackademy. No se autoriza su uso o redistribución sin consentimiento.<br>
+  El acceso implica aceptar los <a href="#" style="color:#7f7fff;">Términos de uso de la demo</a>.
+</footer>
+  
 </body>
 </html>
